@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: WpMailCatcher 2.1.0\n"
+"Project-Id-Version: WpMailCatcher 2.1.11\n"
 "Report-Msgid-Bugs-To: wordpress@jamesward.io\n"
-"POT-Creation-Date: 2023-06-01 18:09+0000\n"
+"POT-Creation-Date: 2026-05-04 12:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,55 +30,55 @@ msgstr ""
 msgid "Once a month"
 msgstr ""
 
-#: ../../src/GeneralHelper.php:218
+#: ../../src/GeneralHelper.php:233
 #, php-format
 msgctxt "%s = human-readable time difference"
 msgid "%s"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:61
+#: ../../src/MailAdminTable.php:75
 msgid "This subject was base64 decoded"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:76
+#: ../../src/MailAdminTable.php:92
 msgid "This subject was quoted printable decoded"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:101
+#: ../../src/MailAdminTable.php:117
 msgid "More Info"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:109 ../../src/Views/NewMessageModal.php:30
+#: ../../src/MailAdminTable.php:125 ../../src/Views/NewMessageModal.php:30
 msgid "To"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:110 ../../src/Views/NewMessageModal.php:53
+#: ../../src/MailAdminTable.php:126 ../../src/Views/NewMessageModal.php:53
 msgid "Subject"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:111 ../../src/Views/NewMessageModal.php:33
+#: ../../src/MailAdminTable.php:127 ../../src/Views/NewMessageModal.php:33
 msgid "From"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:112
+#: ../../src/MailAdminTable.php:128
 msgid "Sent"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:120 ../../src/MailAdminTable.php:159
+#: ../../src/MailAdminTable.php:136 ../../src/MailAdminTable.php:177
 msgid "Delete"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:121 ../../src/MailAdminTable.php:160
+#: ../../src/MailAdminTable.php:137 ../../src/MailAdminTable.php:178
 #: ../../src/Views/LogModal.php:92
 msgid "Resend"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:122 ../../src/MailAdminTable.php:161
+#: ../../src/MailAdminTable.php:138 ../../src/MailAdminTable.php:179
 #: ../../src/Views/ExportWarningDialog.php:81
 msgid "Export"
 msgstr ""
 
-#: ../../src/MailAdminTable.php:123
+#: ../../src/MailAdminTable.php:139
 msgid "View"
 msgstr ""
 
@@ -119,11 +119,11 @@ msgstr ""
 msgid "If you've found this useful - please rate us!"
 msgstr ""
 
-#: ../../src/Views/Log.php:22
+#: ../../src/Views/Log.php:33
 msgid "logs"
 msgstr ""
 
-#: ../../src/Views/Log.php:30
+#: ../../src/Views/Log.php:41
 #, php-format
 msgid ""
 "Your WP Mail Catcher database needs upgrading. <strong>Click <a href=\"%s"
@@ -131,7 +131,7 @@ msgid ""
 "                             to perform the upgrade.</strong>"
 msgstr ""
 
-#: ../../src/Views/Log.php:47
+#: ../../src/Views/Log.php:61
 #, php-format
 msgid ""
 "You have <strong>over %s</strong> messages stored and <a href=\"%s\">auto-"
@@ -141,27 +141,27 @@ msgid ""
 "                             auto-delete or delete some logs."
 msgstr ""
 
-#: ../../src/Views/Log.php:62
+#: ../../src/Views/Log.php:76
 msgid "New Message"
 msgstr ""
 
-#: ../../src/Views/Log.php:67 ../../src/Views/Log.php:77
+#: ../../src/Views/Log.php:81 ../../src/Views/Log.php:91
 msgid "Export all messages"
 msgstr ""
 
-#: ../../src/Views/Log.php:88
+#: ../../src/Views/Log.php:102
 msgid "All"
 msgstr ""
 
-#: ../../src/Views/Log.php:96
+#: ../../src/Views/Log.php:110
 msgid "Successful"
 msgstr ""
 
-#: ../../src/Views/Log.php:104
+#: ../../src/Views/Log.php:118
 msgid "Failed"
 msgstr ""
 
-#: ../../src/Views/Log.php:118
+#: ../../src/Views/Log.php:147
 msgid "Search Logs"
 msgstr ""
 
@@ -290,20 +290,20 @@ msgstr ""
 msgid "Yes - delete messages that are over %s old"
 msgstr ""
 
-#: ../../src/Views/Settings.php:141
+#: ../../src/Views/Settings.php:144
 #, php-format
 msgid "Will next run in: %s. <a href=\""
 msgstr ""
 
-#: ../../src/Views/Settings.php:155
+#: ../../src/Views/Settings.php:158
 msgid "Database version"
 msgstr ""
 
-#: ../../src/Views/Settings.php:164
+#: ../../src/Views/Settings.php:170
 #, php-format
 msgid "%s. <a href=\""
 msgstr ""
 
-#: ../../src/Views/Settings.php:178
+#: ../../src/Views/Settings.php:184
 msgid "Save Changes"
 msgstr ""
