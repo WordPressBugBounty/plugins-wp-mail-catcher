@@ -40,7 +40,7 @@ class GeneralHelper
 
     public static function setSettings()
     {
-        self::$csvExportFileName = 'WpMailCatcherExport_' . date('d-m-Y_H-i-s') . '.csv';
+        self::$csvExportFileName = 'WpMailCatcherExport_' . gmdate('d-m-Y_H-i-s') . '.csv';
         self::$csvExportLegalColumns = [
             'time',
             'subject',
@@ -141,7 +141,7 @@ class GeneralHelper
         return strtolower($label);
     }
 
-    private static function getAllowedTags()
+    public static function getAllowedTags()
     {
         $tags = wp_kses_allowed_html('post');
         $tags['style'] = [];
@@ -154,7 +154,7 @@ class GeneralHelper
         return wp_kses($value, self::getAllowedTags());
     }
 
-    public static function getAttachmentIdsFromUrl($urls)
+    public static function getAttachmentIdsFromUrl(array $urls)
     {
         if (empty($urls)) {
             return [];
@@ -162,47 +162,33 @@ class GeneralHelper
 
         global $wpdb;
 
-        $sql = "SELECT DISTINCT post_id
-                FROM " . $wpdb->prefix . "postmeta
-				WHERE meta_value LIKE %s";
-
-        if (is_array($urls) && count($urls) > 1) {
-            foreach ($urls as $url) {
-                // Skip first url as it's covered above
-                if ($url === $urls[0]) {
-                    continue;
-                }
-
-                $sql .= " OR meta_value LIKE %s";
-            }
-        }
-
-        $sql .= " AND meta_key = '_wp_attached_file'";
-
-        $urls = array_map(function ($url) {
-            return '%' . $url . '%';
+        $likeValues = array_map(function ($url) use ($wpdb) {
+            return '%' . $wpdb->esc_like($url) . '%';
         }, $urls);
 
-        $sql = $wpdb->prepare($sql, $urls);
-        $results = $wpdb->get_results($sql, ARRAY_N);
+        $likeClauses = implode(' OR ', array_fill(0, count($likeValues), 'meta_value LIKE %s'));
 
-        if (isset($results[0])) {
-            return array_column($results, 0);
-        }
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Only placeholders are interpolated, values are prepared
+        $attachmentIds = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT DISTINCT post_id FROM {$wpdb->postmeta}
+                WHERE ({$likeClauses}) AND meta_key = '_wp_attached_file'",
+                $likeValues
+            )
+        );
+        // phpcs:enable
 
-        return [];
+        return $attachmentIds;
     }
 
     public static function getPreservedUrlParams($params = [])
     {
-        $whitelistedParamValues = array_intersect_key($_GET, array_flip(GeneralHelper::$whitelistedRedirectParams));
-        $params = array_merge($whitelistedParamValues, $params);
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only preserves list table view params (paging, sorting, search)
+        $whitelistedParamValues = array_intersect_key($_GET, array_flip(self::$whitelistedRedirectParams));
+        $scalarValues = array_filter($whitelistedParamValues, 'is_scalar');
+        $sanitisedValues = array_map('sanitize_text_field', wp_unslash($scalarValues));
 
-        if (!isset($params['page'])) {
-            $params['page'] = GeneralHelper::$adminPageSlug;
-        }
-
-        return $params;
+        return array_merge(['page' => self::$adminPageSlug], $sanitisedValues, $params);
     }
 
     public static function redirectToThisHomeScreen($params = [])
@@ -236,10 +222,14 @@ class GeneralHelper
 
     public static function getHumanReadableTime($from, $to, $suffix = ' ago')
     {
-        return sprintf(
-            _x('%s' . $suffix, '%s = human-readable time difference', 'WpMailCatcher'),
-            human_time_diff($from, $to)
-        );
+        $timeDifference = human_time_diff($from, $to);
+
+        if ($suffix === ' ago') {
+            /* translators: %s: human-readable time difference, e.g. "5 mins" */
+            return sprintf(__('%s ago', 'wp-mail-catcher'), $timeDifference);
+        }
+
+        return $timeDifference . $suffix;
     }
 
     /**

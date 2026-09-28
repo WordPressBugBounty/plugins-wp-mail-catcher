@@ -26,7 +26,7 @@ trait LogHelper
 
         $transformedArgs = $transformFunc($args);
         $userFilteredArgs = apply_filters(
-            GeneralHelper::$actionNameSpace . '_before_success_log_save',
+            'wp_mail_catcher_before_success_log_save',
             // Only allow certain values to be changed via filters/hooks
             array_intersect_key($transformedArgs, array_fill_keys(Logs::$whitelistedColumns, null))
         );
@@ -35,6 +35,7 @@ trait LogHelper
             return $args;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom table, cache is flushed below
         $wpdb->insert($wpdb->prefix . GeneralHelper::$tableName, array_merge($transformedArgs, $userFilteredArgs));
 
         Cache::flush();
@@ -45,7 +46,7 @@ trait LogHelper
             $args['to'] = [];
         }
 
-        do_action(GeneralHelper::$actionNameSpace . '_mail_success', Logs::getFirst(['post__in' => $this->id]));
+        do_action('wp_mail_catcher_mail_success', Logs::getFirst(['post__in' => $this->id]));
 
         return $args;
     }
@@ -66,11 +67,11 @@ trait LogHelper
 
         $log = Logs::getFirst(['post__in' => $this->id]);
         $log['status'] = 0;
-        $log['error'] = $error;
+        $log['error'] = wp_strip_all_tags($error);
         $log['time'] = $log['timestamp'];
 
         $transformedArgs = apply_filters(
-            GeneralHelper::$actionNameSpace . '_before_error_log_save',
+            'wp_mail_catcher_before_error_log_save',
             // Only allow certain values to be changed via filters/hooks
             array_intersect_key($log, array_fill_keys(Logs::$whitelistedColumns, null))
         );
@@ -87,6 +88,7 @@ trait LogHelper
             $transformedArgs = $log;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom table, cache is flushed below
         $wpdb->update(
             $wpdb->prefix . GeneralHelper::$tableName,
             array_merge($transformedArgs, ['status' => 0]),
@@ -95,7 +97,7 @@ trait LogHelper
 
         Cache::flush();
 
-        do_action(GeneralHelper::$actionNameSpace . '_mail_failed', $log);
+        do_action('wp_mail_catcher_mail_failed', $log);
     }
 
     public function saveIsHtml($contentType)
@@ -107,6 +109,7 @@ trait LogHelper
 
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom table, cache is flushed below
         $wpdb->update(
             $wpdb->prefix . GeneralHelper::$tableName,
             [
@@ -145,8 +148,11 @@ trait LogHelper
             $value = str_replace(GeneralHelper::$uploadsFolderInfo['basedir'] . '/', '', $value);
         });
 
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Only set when sending via the "New Message" form, verified in Bootstrap::route()
         if (isset($_POST['attachment_ids'])) {
-            $attachmentIds = array_values(array_filter($_POST['attachment_ids']));
+            $attachmentIds = array_map('absint', (array)wp_unslash($_POST['attachment_ids']));
+            $attachmentIds = array_values(array_filter($attachmentIds));
+            // phpcs:enable
         } else {
             $attachmentIds = GeneralHelper::getAttachmentIdsFromUrl($attachments);
 
@@ -181,6 +187,7 @@ trait LogHelper
     private function getBacktrace($functionName = 'wp_mail'): ?array
     {
         $backtraceSegment = null;
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Records where wp_mail() was called from, shown in the log's "Debug" tab
         $backtrace = debug_backtrace();
 
         foreach ($backtrace as $segment) {

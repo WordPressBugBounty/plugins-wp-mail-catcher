@@ -130,11 +130,21 @@ class Mail
             fputcsv($out, $v);
         }
 
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Stream to php://output
         fclose($out);
     }
 
     public static function add($headerKeys, $headerValues, $attachmentIds, $subject, $message, $isHtml = false)
     {
+        $headerKeys = self::sanitizeEach($headerKeys, 'sanitize_text_field');
+        // Header values may contain "Name <email>" so strip line breaks (header injection) rather than tags
+        $headerValues = self::sanitizeEach($headerValues, function ($value) {
+            return trim(str_replace(["\r", "\n"], '', $value));
+        });
+        $attachmentIds = self::sanitizeEach($attachmentIds, 'absint');
+        $subject = is_scalar($subject) ? sanitize_text_field($subject) : '';
+        $message = is_scalar($message) ? wp_kses_post($message) : '';
+
         $tos = [];
         $headers = [];
         $attachments = [];
@@ -185,5 +195,12 @@ class Mail
         if ($isHtml) {
             remove_filter('wp_mail_content_type', $updateContentType, self::$contentTypeFilterPriority);
         }
+    }
+
+    private static function sanitizeEach($values, callable $sanitizer): array
+    {
+        return array_map(function ($value) use ($sanitizer) {
+            return is_scalar($value) ? $sanitizer($value) : '';
+        }, (array)$values);
     }
 }

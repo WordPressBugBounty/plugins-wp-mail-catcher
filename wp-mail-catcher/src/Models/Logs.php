@@ -121,33 +121,27 @@ class Logs
                 $whereClause = true;
             }
 
-            $sql .= "(subject LIKE %s) OR ";
-            $sql .= "(message LIKE %s) OR ";
-            $sql .= "(email_to LIKE %s) OR ";
-            $sql .= "(attachments LIKE %s) OR ";
-            $sql .= "(additional_headers LIKE %s) ";
+            $sql .= "(subject LIKE %s OR ";
+            $sql .= "message LIKE %s OR ";
+            $sql .= "email_to LIKE %s OR ";
+            $sql .= "attachments LIKE %s OR ";
+            $sql .= "additional_headers LIKE %s) ";
 
             $placeholderValues = array_merge(
                 $placeholderValues,
-                array_fill(0, 5, '%' . $args['s'] . '%')
+                array_fill(0, 5, '%' . $wpdb->esc_like($args['s']) . '%')
             );
         }
 
-        if ($args['post_status'] != 'any') {
+        // Unrecognised statuses are treated as 'any' rather than producing an empty WHERE clause
+        if (in_array($args['post_status'], ['successful', 'failed'], true)) {
             if ($whereClause) {
                 $sql .= "AND ";
             } else {
                 $sql .= "WHERE ";
             }
 
-            switch ($args['post_status']) {
-                case ('successful'):
-                    $sql .= "status = 1 ";
-                    break;
-                case ('failed'):
-                    $sql .= "status = 0 ";
-                    break;
-            }
+            $sql .= $args['post_status'] === 'successful' ? "status = 1 " : "status = 0 ";
         }
 
         $order = strtolower($args['order']) === "desc" ? "DESC" : "ASC";
@@ -162,11 +156,13 @@ class Logs
             ]);
         }
 
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom table cached via Cache, columns/order are whitelisted above and values use placeholders
         if (count($placeholderValues)) {
             $sql = $wpdb->prepare($sql, $placeholderValues);
         }
 
         $results = $wpdb->get_results($sql, ARRAY_A);
+        // phpcs:enable
         $results = self::dbResultTransform($results, $args);
 
         if (!isset($args['ignore_cache']) || !$args['ignore_cache']) {
@@ -199,7 +195,7 @@ class Logs
                 $result['timestamp'] = $result['time'];
                 $result['time'] = $args['date_time_format'] == 'human' ?
                     GeneralHelper::getHumanReadableTimeFromNow($result['timestamp']) :
-                    date($args['date_time_format'], $result['timestamp']);
+                    gmdate($args['date_time_format'], $result['timestamp']);
             }
 
             // This will exist if the db_version is >= 2.0.0
@@ -242,6 +238,7 @@ class Logs
     {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom table, the name is not user input
         return $wpdb->get_var("SELECT COUNT(*) FROM " . $wpdb->prefix . GeneralHelper::$tableName);
     }
 
@@ -259,14 +256,15 @@ class Logs
 
         $sql = "DELETE FROM " . $wpdb->prefix . GeneralHelper::$tableName . "
                 WHERE id IN(" . implode(',', array_fill(0, count($ids), '%d')) . ")";
-        $sql = $wpdb->prepare($sql, $ids);
-        $wpdb->query($sql);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom table, ids use placeholders
+        $wpdb->query($wpdb->prepare($sql, $ids));
     }
 
     public static function truncate()
     {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom table, the name is not user input
         $wpdb->query("TRUNCATE TABLE " . $wpdb->prefix . GeneralHelper::$tableName);
     }
 
@@ -290,7 +288,7 @@ class Logs
         $timestamp = time() - $interval;
 
         $sql = "DELETE FROM " . $wpdb->prefix . GeneralHelper::$tableName . " WHERE time <= %d";
-        $sql = $wpdb->prepare($sql, $timestamp);
-        $wpdb->query($sql);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom table, timestamp uses a placeholder
+        $wpdb->query($wpdb->prepare($sql, $timestamp));
     }
 }
